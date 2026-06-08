@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VNPAY Drive – Đang chuyển hướng...</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #0F1118 0%, #151929 50%, #0F1118 100%);
+      color: #E8E9F0;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 480px;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1A1C25;
+      border: 1px solid #2A2D3A;
+      border-radius: 20px;
+      padding: 48px 40px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      width: 180px;
+      margin-bottom: 32px;
+      opacity: 0.9;
+    }
+
+    /* ─── Spinner ──────────────────────────────────── */
+    .spinner-wrap {
+      margin-bottom: 24px;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #2A2D3A;
+      border-top-color: #7986CB;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ─── Status icon ─────────────────────────────── */
+    .status-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 24px;
+    }
+
+    .status-icon.success {
+      background: rgba(46, 125, 50, 0.15);
+      color: #66BB6A;
+      border: 2px solid rgba(46, 125, 50, 0.3);
+    }
+
+    .status-icon.error {
+      background: rgba(211, 47, 47, 0.15);
+      color: #EF5350;
+      border: 2px solid rgba(211, 47, 47, 0.3);
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+
+    .message {
+      font-size: 14px;
+      color: #9A9DAE;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: #2A2D3A;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar .fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #283593, #7986CB);
+      border-radius: 2px;
+      animation: progress 2s ease-in-out forwards;
+    }
+
+    @keyframes progress {
+      0%   { width: 0%; }
+      60%  { width: 80%; }
+      100% { width: 100%; }
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background: linear-gradient(135deg, #283593, #3949AB);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: linear-gradient(135deg, #3949AB, #5C6BC0);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(40, 53, 147, 0.4);
+    }
+
+    .hint {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #52556A;
+    }
+
+    .countdown {
+      color: #7986CB;
+      font-weight: 600;
+    }
+
+    .error-detail {
+      background: rgba(211, 47, 47, 0.08);
+      border: 1px solid rgba(211, 47, 47, 0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #EF5350;
+      word-break: break-word;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <!-- VNPAY Logo -->
+      <img
+        src="https://drive.vnpay.vn/v2/assets/images/vnpay_ngang.png"
+        alt="VNPAY Drive"
+        class="logo"
+        onerror="this.style.display='none'"
+      >
+
+      <!-- State: Loading / Redirecting -->
+      <div id="state-loading">
+        <div class="spinner-wrap">
+          <div class="spinner"></div>
+        </div>
+        <div class="title">Đang chuyển hướng...</div>
+        <div class="message">
+          Đang mở ứng dụng VNPAY Drive Desktop.<br>
+          Vui lòng chờ trong giây lát.
+        </div>
+        <div class="progress-bar"><div class="fill"></div></div>
+        <div class="hint">
+          Tự động chuyển hướng sau <span id="countdown" class="countdown">3</span> giây
+        </div>
+      </div>
+
+      <!-- State: Success -->
+      <div id="state-success" class="hidden">
+        <div class="status-icon success">✓</div>
+        <div class="title">Chuyển hướng thành công!</div>
+        <div class="message">
+          Ứng dụng VNPAY Drive Desktop đã nhận được thông tin đăng nhập.<br>
+          Bạn có thể đóng tab này.
+        </div>
+      </div>
+
+      <!-- State: Error -->
+      <div id="state-error" class="hidden">
+        <div class="status-icon error">✗</div>
+        <div class="title">Đăng nhập thất bại</div>
+        <div id="error-detail" class="error-detail"></div>
+        <div class="message">
+          Vui lòng đóng tab này và thử lại từ ứng dụng.
+        </div>
+      </div>
+
+      <!-- State: Fallback (manual link) -->
+      <div id="state-fallback" class="hidden">
+        <div class="status-icon success">🔗</div>
+        <div class="title">Mở ứng dụng</div>
+        <div class="message">
+          Nếu ứng dụng chưa tự động mở,<br>
+          hãy nhấn nút bên dưới.
+        </div>
+        <a id="manual-link" href="#" class="btn">
+          Mở VNPAY Drive Desktop
+        </a>
+        <div class="hint">
+          Nếu vẫn không mở được, hãy đảm bảo ứng dụng đã được cài đặt.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ─── Config ──────────────────────────────────────────────────
+      var CUSTOM_SCHEME = 'vnpaydrive';
+      var CALLBACK_PATH = 'callback';
+      var REDIRECT_DELAY_MS = 1500;
+      var FALLBACK_DELAY_MS = 3000;
+
+      // ─── DOM refs ────────────────────────────────────────────────
+      var stateLoading  = document.getElementById('state-loading');
+      var stateSuccess  = document.getElementById('state-success');
+      var stateError    = document.getElementById('state-error');
+      var stateFallback = document.getElementById('state-fallback');
+      var errorDetail   = document.getElementById('error-detail');
+      var manualLink    = document.getElementById('manual-link');
+      var countdownEl   = document.getElementById('countdown');
+
+      // ─── Parse query string ──────────────────────────────────────
+      function getQueryParams() {
+        var params = {};
+        var search = window.location.search.substring(1);
+        if (!search) return params;
+        var pairs = search.split('&');
+        for (var i = 0; i < pairs.length; i++) {
+          var pair = pairs[i].split('=');
+          var key = decodeURIComponent(pair[0]);
+          var value = pair.length > 1 ? decodeURIComponent(pair[1]) : '';
+          params[key] = value;
+        }
+        return params;
+      }
+
+      // ─── Build deep link URL ─────────────────────────────────────
+      function buildDeepLink(params) {
+        var queryParts = [];
+        var keys = Object.keys(params);
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          queryParts.push(
+            encodeURIComponent(key) + '=' + encodeURIComponent(params[key])
+          );
+        }
+        return CUSTOM_SCHEME + '://' + CALLBACK_PATH +
+               (queryParts.length > 0 ? '?' + queryParts.join('&') : '');
+      }
+
+      // ─── Show a state ────────────────────────────────────────────
+      function showState(state) {
+        stateLoading.classList.add('hidden');
+        stateSuccess.classList.add('hidden');
+        stateError.classList.add('hidden');
+        stateFallback.classList.add('hidden');
+        state.classList.remove('hidden');
+      }
+
+      // ─── Countdown animation ─────────────────────────────────────
+      function startCountdown(seconds, onDone) {
+        var remaining = seconds;
+        countdownEl.textContent = remaining;
+        var interval = setInterval(function () {
+          remaining--;
+          if (remaining <= 0) {
+            clearInterval(interval);
+            countdownEl.textContent = '0';
+            if (onDone) onDone();
+          } else {
+            countdownEl.textContent = remaining;
+          }
+        }, 1000);
+      }
+
+      // ─── Main ────────────────────────────────────────────────────
+      var params = getQueryParams();
+
+      // Check for SSO errors
+      if (params.error) {
+        showState(stateError);
+        errorDetail.textContent =
+          (params.error_description || params.error || 'Unknown error');
+        return;
+      }
+
+      // Check for authorization code
+      if (!params.code) {
+        showState(stateError);
+        errorDetail.textContent =
+          'Không nhận được authorization code từ SSO server.';
+        return;
+      }
+
+      // Build the deep link
+      var deepLink = buildDeepLink(params);
+      manualLink.href = deepLink;
+
+      // Start countdown then redirect
+      startCountdown(3, function () {
+        // Attempt redirect
+        try {
+          window.location.href = deepLink;
+        } catch (e) {
+          showState(stateFallback);
+          return;
+        }
+
+        // After a delay, check if we're still here (redirect failed)
+        setTimeout(function () {
+          // If page is still visible, show fallback
+          showState(stateFallback);
+        }, FALLBACK_DELAY_MS);
+
+        // Optimistic: show success briefly
+        setTimeout(function () {
+          if (!document.hidden) {
+            // Still here, means redirect might have worked via protocol handler
+            // or failed. The fallback timer above will handle it.
+          }
+        }, REDIRECT_DELAY_MS);
+      });
+
+      // Listen for page becoming hidden (app opened successfully)
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          showState(stateSuccess);
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
