@@ -1,790 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SSH Tunnel Manager — Native AOT CLI for Ubuntu</title>
-  <meta name="description" content="A blazing-fast, Native AOT CLI tool for managing multi-port SSH tunnels on Ubuntu. Built with .NET 9, runs as a Systemd service." />
-  <meta name="keywords" content="SSH tunnel, CLI, Ubuntu, Linux, .NET, Native AOT, port forwarding, jump host" />
-  <meta property="og:title" content="SSH Tunnel Manager" />
-  <meta property="og:description" content="Multi-port SSH tunnel management for Ubuntu. Native AOT — single binary, zero runtime." />
-  <meta property="og:type" content="website" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central Knowledge Gateway — Semantic Search & RAG Platform</title>
+  <meta name="description" content="Multi-tenant semantic search, RAG, and AI agent platform for organizational knowledge. Index documents, search semantically, and power AI assistants.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg:        #09090f;
-      --bg2:       #0f0f1a;
-      --bg3:       #13131f;
-      --border:    rgba(0,210,190,0.12);
-      --cyan:      #00d2be;
-      --cyan2:     #00f0d8;
-      --green:     #39d98a;
-      --yellow:    #f0c040;
-      --text:      #e2e8f0;
-      --muted:     #64748b;
-      --glow:      0 0 40px rgba(0,210,190,0.25);
+      --bg-primary: #0a0e1a;
+      --bg-card: #111827;
+      --bg-card-hover: #1a2236;
+      --border: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #818cf8;
+      --accent-glow: rgba(129, 140, 248, 0.15);
+      --accent-2: #c084fc;
+      --gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+      --gradient-subtle: linear-gradient(135deg, rgba(129,140,248,0.1) 0%, rgba(192,132,252,0.1) 100%);
     }
-
     html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-primary); color: var(--text-primary); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
 
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
+    /* Background effects */
+    .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(129,140,248,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(129,140,248,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+    .bg-glow { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 800px; height: 800px; background: radial-gradient(circle, rgba(129,140,248,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
 
-    /* ── Noise overlay ── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: 0.4;
-    }
+    /* Navigation */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); background: rgba(10,14,26,0.8); border-bottom: 1px solid var(--border); }
+    .nav-brand { font-weight: 700; font-size: 1.1rem; background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a { color: var(--text-secondary); font-size: 0.875rem; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text-primary); }
 
-    /* ── NAV ── */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 2rem;
-      background: rgba(9,9,15,0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-logo {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1rem; font-weight: 600;
-      color: var(--cyan);
-      text-decoration: none;
-    }
-    .nav-logo span { color: var(--text); }
-    .nav-links { display: flex; gap: 1.5rem; }
-    .nav-links a {
-      color: var(--muted); text-decoration: none; font-size: 0.875rem;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--cyan); }
-    .btn-gh {
-      display: flex; align-items: center; gap: 0.4rem;
-      padding: 0.4rem 1rem;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text); text-decoration: none; font-size: 0.875rem;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .btn-gh:hover { border-color: var(--cyan); background: rgba(0,210,190,0.08); }
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; transition: all 0.2s; border: none; cursor: pointer; }
+    .btn-primary { background: var(--gradient); color: #fff; box-shadow: 0 4px 15px rgba(129,140,248,0.3); }
+    .btn-primary:hover { box-shadow: 0 6px 25px rgba(129,140,248,0.5); transform: translateY(-1px); }
+    .btn-secondary { background: transparent; color: var(--text-primary); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg-card); border-color: var(--accent); }
 
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      min-height: 92vh;
-      display: flex; align-items: center; justify-content: center;
-      text-align: center;
-      padding: 4rem 2rem;
-      overflow: hidden;
-    }
+    /* Hero */
+    .hero { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 10rem 2rem 6rem; max-width: 900px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 100px; background: var(--accent-glow); border: 1px solid rgba(129,140,248,0.2); color: var(--accent); font-size: 0.8rem; font-weight: 500; margin-bottom: 2rem; }
+    .hero-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
+    .hero h1 { font-size: 4rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 1.5rem; }
+    .hero h1 span { background: var(--gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p { font-size: 1.25rem; color: var(--text-secondary); line-height: 1.6; max-width: 650px; margin-bottom: 2.5rem; }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
 
-    /* Background grid */
-    .hero::after {
-      content: '';
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(0,210,190,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,210,190,0.04) 1px, transparent 1px);
-      background-size: 40px 40px;
-      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent);
-      pointer-events: none;
-    }
+    /* Code block */
+    .code-block { position: relative; z-index: 1; max-width: 700px; margin: 0 auto 6rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; text-align: left; }
+    .code-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+    .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .code-dot:nth-child(1) { background: #ef4444; }
+    .code-dot:nth-child(2) { background: #eab308; }
+    .code-dot:nth-child(3) { background: #22c55e; }
+    .code-header span { margin-left: 0.5rem; font-size: 0.75rem; color: var(--text-muted); }
+    .code-body { padding: 1.25rem; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.8; color: var(--text-secondary); overflow-x: auto; }
+    .code-body .comment { color: var(--text-muted); }
+    .code-body .keyword { color: var(--accent); }
+    .code-body .string { color: #4ade80; }
+    .code-body .method { color: #f472b6; }
 
-    /* Radial glow */
-    .hero-glow {
-      position: absolute; top: -20%; left: 50%; transform: translateX(-50%);
-      width: 800px; height: 500px;
-      background: radial-gradient(ellipse, rgba(0,210,190,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
+    /* Features */
+    .features { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+    .features-title { text-align: center; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .features-subtitle { text-align: center; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 4rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .feature-card { padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 1rem; transition: all 0.3s; }
+    .feature-card:hover { background: var(--bg-card-hover); border-color: rgba(129,140,248,0.3); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .feature-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; background: var(--accent-glow); color: var(--accent); font-size: 1.25rem; margin-bottom: 1.25rem; }
+    .feature-card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.75rem; }
+    .feature-card p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
 
-    .hero-content { position: relative; z-index: 1; max-width: 800px; }
+    /* Architecture */
+    .architecture { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+    .arch-flow { display: flex; flex-direction: column; gap: 1rem; align-items: center; }
+    .arch-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .arch-box { padding: 1rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.75rem; font-size: 0.85rem; font-weight: 500; text-align: center; min-width: 140px; transition: border-color 0.3s; }
+    .arch-box:hover { border-color: var(--accent); }
+    .arch-box.primary { border-color: rgba(129,140,248,0.4); background: var(--accent-glow); }
+    .arch-arrow { color: var(--text-muted); font-size: 1.5rem; }
 
-    .badge {
-      display: inline-flex; align-items: center; gap: 0.4rem;
-      padding: 0.3rem 0.9rem;
-      border: 1px solid rgba(0,210,190,0.3);
-      border-radius: 999px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem; color: var(--cyan);
-      background: rgba(0,210,190,0.06);
-      margin-bottom: 1.5rem;
-      animation: fadeInUp 0.6s ease both;
-    }
-    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    /* CTA */
+    .cta { position: relative; z-index: 1; text-align: center; padding: 6rem 2rem; }
+    .cta-inner { max-width: 600px; margin: 0 auto; padding: 4rem 3rem; background: var(--gradient-subtle); border: 1px solid rgba(129,140,248,0.15); border-radius: 1.5rem; }
+    .cta h2 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+    .cta p { color: var(--text-secondary); margin-bottom: 2rem; }
 
-    h1 {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.5rem;
-      animation: fadeInUp 0.6s 0.1s ease both;
-    }
-    h1 .accent { color: var(--cyan); }
+    /* Footer */
+    footer { position: relative; z-index: 1; text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; }
 
-    .hero-sub {
-      font-size: 1.1rem; color: var(--muted);
-      max-width: 560px; margin: 0 auto 2.5rem;
-      animation: fadeInUp 0.6s 0.2s ease both;
-    }
-
-    .hero-cta {
-      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
-      animation: fadeInUp 0.6s 0.3s ease both;
-    }
-
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.75rem 1.75rem;
-      background: linear-gradient(135deg, var(--cyan), #009d8a);
-      border-radius: 8px;
-      color: #09090f; font-weight: 600; font-size: 0.95rem;
-      text-decoration: none;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 0 20px rgba(0,210,190,0.3);
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,210,190,0.5); }
-
-    .btn-secondary {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.75rem 1.75rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text); font-size: 0.95rem;
-      text-decoration: none;
-      background: rgba(255,255,255,0.03);
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .btn-secondary:hover { border-color: var(--cyan); background: rgba(0,210,190,0.05); }
-
-    /* ── INSTALL BOX ── */
-    .install-box {
-      margin: 3.5rem auto 0;
-      max-width: 600px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      animation: fadeInUp 0.6s 0.4s ease both;
-      box-shadow: var(--glow);
-    }
-    .install-box-header {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.75rem 1rem;
-      background: var(--bg3);
-      border-bottom: 1px solid var(--border);
-    }
-    .dot-red   { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
-    .dot-yel   { width: 10px; height: 10px; border-radius: 50%; background: #febc2e; }
-    .dot-grn   { width: 10px; height: 10px; border-radius: 50%; background: #28c840; }
-    .install-box-header span { margin-left: 0.5rem; font-size: 0.75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-    .install-cmd {
-      padding: 1.25rem 1.5rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.875rem;
-      color: var(--cyan2);
-    }
-    .install-cmd .prompt { color: var(--green); }
-
-    /* ── SECTION ── */
-    section { padding: 6rem 2rem; position: relative; }
-    .container { max-width: 1100px; margin: 0 auto; }
-    .section-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em;
-      color: var(--cyan); margin-bottom: 0.75rem;
-    }
-    .section-title {
-      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-      font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem;
-    }
-    .section-sub { color: var(--muted); max-width: 500px; margin-bottom: 3rem; }
-
-    /* ── FEATURES GRID ── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.25rem;
-    }
-    .feature-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.75rem;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-    .feature-card:hover {
-      border-color: rgba(0,210,190,0.3);
-      transform: translateY(-2px);
-    }
-    .feature-icon {
-      font-size: 1.75rem; margin-bottom: 1rem;
-    }
-    .feature-card h3 { font-size: 1.05rem; margin-bottom: 0.5rem; font-weight: 600; }
-    .feature-card p  { color: var(--muted); font-size: 0.875rem; line-height: 1.6; }
-
-    /* ── TERMINAL DEMO ── */
-    .demo-section { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .demo-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 2rem; align-items: start;
-    }
-    @media (max-width: 768px) { .demo-grid { grid-template-columns: 1fr; } }
-
-    .terminal {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: var(--glow);
-    }
-    .terminal-bar {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.7rem 1rem;
-      background: var(--bg3);
-      border-bottom: 1px solid var(--border);
-    }
-    .terminal-bar span { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted); }
-    .terminal-body { padding: 1.25rem 1.5rem; }
-    .term-line { display: flex; gap: 0.6rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; margin-bottom: 0.4rem; line-height: 1.6; }
-    .term-prompt { color: var(--green); flex-shrink: 0; }
-    .term-cmd    { color: var(--text); }
-    .term-cyan   { color: var(--cyan2); }
-    .term-grey   { color: var(--muted); }
-    .term-green  { color: var(--green); }
-    .term-yellow { color: var(--yellow); }
-    .term-blank  { height: 0.6rem; }
-
-    /* ── COMMANDS TABLE ── */
-    .commands-grid {
-      display: grid; gap: 0.75rem;
-    }
-    .cmd-row {
-      display: flex; align-items: center; gap: 1rem;
-      padding: 0.85rem 1.25rem;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      transition: border-color 0.2s;
-    }
-    .cmd-row:hover { border-color: rgba(0,210,190,0.25); }
-    .cmd-key {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem; color: var(--cyan2);
-      white-space: nowrap; flex-shrink: 0; min-width: 200px;
-    }
-    .cmd-desc { color: var(--muted); font-size: 0.875rem; }
-
-    /* ── STATS ── */
-    .stats-row {
-      display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;
-    }
-    .stat-card {
-      text-align: center;
-      padding: 2rem 2.5rem;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      flex: 1; min-width: 160px;
-    }
-    .stat-num {
-      font-size: 2.5rem; font-weight: 700;
-      background: linear-gradient(135deg, var(--cyan), var(--green));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .stat-label { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 3rem 2rem;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-    footer a { color: var(--cyan); text-decoration: none; }
-
-    /* ── ANIMATIONS ── */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.4; }
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; } 50% { opacity: 0; }
-    }
-    .cursor::after {
-      content: '█';
-      color: var(--cyan);
-      animation: blink 1s infinite;
-      font-size: 0.7rem;
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .arch-row { flex-direction: column; align-items: center; }
     }
   </style>
 </head>
 <body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
 
-<!-- ── NAV ── -->
-<nav>
-  <a href="#" class="nav-logo">🚇 <span>tunnel</span></a>
-  <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#gui">GUI</a>
-    <a href="#demo">Demo</a>
-    <a href="#commands">Commands</a>
-    <a href="#uninstall">Uninstall</a>
-    <a href="https://github.com/skyber2016/tunnel" target="_blank" rel="noopener">Docs</a>
-  </div>
-  <a href="https://github.com/skyber2016/tunnel" class="btn-gh" target="_blank" rel="noopener">
-    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-    </svg>
-    GitHub
-  </a>
-</nav>
-
-<!-- ── HERO ── -->
-<section class="hero">
-  <div class="hero-glow"></div>
-  <div class="hero-content">
-    <div class="badge">
-      <span class="dot"></span>
-      Powered by Claude Sonnet 4.6
+  <nav>
+    <div class="nav-brand">Knowledge Gateway</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#architecture">Architecture</a>
+      <a href="/swagger" target="_blank">API Docs</a>
+      <a href="/admin" class="btn btn-secondary" style="padding:0.5rem 1rem;">Admin Portal</a>
     </div>
+  </nav>
 
-    <h1>
-      Manage SSH Tunnels<br />
-    </h1>
-
-    <p class="hero-sub">
-      A single-binary CLI tool for multi-port SSH tunneling on Ubuntu.
-      Runs as a Systemd user service. Zero runtime. Zero overhead.
-    </p>
-
-    <div class="hero-cta">
-      <a href="https://github.com/skyber2016/tunnel/releases" class="btn-primary" target="_blank" rel="noopener">
-        ⬇ Download Binary
+  <section class="hero">
+    <div class="hero-badge">Open Source Developer Platform</div>
+    <h1>Your Knowledge,<br><span>Instantly Searchable</span></h1>
+    <p>Multi-tenant semantic search and RAG platform. Index documents, query with AI, and power your agents — all from a single gateway.</p>
+    <div class="hero-actions">
+      <a href="/swagger" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>
+        Explore API
       </a>
-      <a href="https://github.com/skyber2016/tunnel" class="btn-secondary" target="_blank" rel="noopener">
-        View on GitHub →
+      <a href="https://github.com" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
       </a>
     </div>
+  </section>
 
-    <div class="install-box">
-      <div class="install-box-header">
-        <div class="dot-red"></div>
-        <div class="dot-yel"></div>
-        <div class="dot-grn"></div>
-        <span>terminal</span>
-      </div>
-      <div class="install-cmd">
-        <span class="prompt">$ </span>curl -sSL <span style="color:#f0c040">https://raw.githubusercontent.com/skyber2016/tunnel/main/install.sh</span> | bash<span class="cursor"></span>
-      </div>
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
+      <span>Quick Start</span>
+    </div>
+    <div class="code-body">
+      <span class="comment"># Start infrastructure</span><br>
+      <span class="method">docker compose</span> up -d<br><br>
+      <span class="comment"># Install & migrate</span><br>
+      <span class="method">pnpm</span> install<br>
+      <span class="method">pnpm</span> prisma migrate dev<br><br>
+      <span class="comment"># Run the platform</span><br>
+      <span class="method">pnpm</span> start:dev &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># API on :3000</span><br>
+      <span class="method">pnpm</span> start:portal &nbsp;&nbsp;&nbsp;<span class="comment"># Portal on :4200</span><br><br>
+      <span class="comment"># Index your first document</span><br>
+      <span class="method">curl</span> -X <span class="keyword">POST</span> http://localhost:3000/documents/index \<br>
+      &nbsp;&nbsp;-H <span class="string">"Authorization: Bearer kgw_live_..."</span> \<br>
+      &nbsp;&nbsp;-d <span class="string">'{"title":"My Doc","content":"...","source":"api"}'</span>
     </div>
   </div>
-</section>
 
-<!-- ── STATS ── -->
-<section style="padding: 3rem 2rem; border-top: 1px solid var(--border);">
-  <div class="container">
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-num">~3MB</div>
-        <div class="stat-label">Single binary size</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">&lt;50ms</div>
-        <div class="stat-label">Cold start time</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">∞</div>
-        <div class="stat-label">Ports per tunnel</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">2</div>
-        <div class="stat-label">Binary targets (x64, ARM64)</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── FEATURES ── -->
-<section id="features">
-  <div class="container">
-    <div class="section-label">Features</div>
-    <h2 class="section-title">Everything you need, nothing you don't</h2>
-    <p class="section-sub">Built for developers who SSH into jump hosts every day.</p>
-
+  <section class="features" id="features">
+    <h2 class="features-title">Everything You Need</h2>
+    <p class="features-subtitle">A complete platform for knowledge management and AI-powered retrieval</p>
     <div class="features-grid">
       <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Semantic Search</h3>
+        <p>Vector-based search powered by Qdrant. Find relevant content by meaning, not just keywords. Configurable top-K with relevance scoring.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>RAG Engine</h3>
+        <p>Retrieval-Augmented Generation using Ollama. Ask questions in natural language and get answers grounded in your indexed knowledge.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h3>Multi-Tenant</h3>
+        <p>Full project isolation with scoped API keys. Each project has its own document space, usage tracking, and audit trail.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>MCP Server</h3>
+        <p>Model Context Protocol support for AI agents. Give Claude, GPT, or any MCP client direct access to your knowledge base.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎛️</div>
+        <h3>Admin Portal</h3>
+        <p>Angular-based admin dashboard. Manage projects, API keys, documents, monitor jobs, and explore search/RAG playgrounds.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Dual Authentication</h3>
+        <p>API keys for programmatic access with scopes. JWT tokens for admin portal with role-based access control.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Usage & Audit</h3>
+        <p>Per-request usage tracking with latency metrics. Full audit trail for compliance and debugging.</p>
+      </div>
+      <div class="feature-card">
         <div class="feature-icon">⚡</div>
-        <h3>Native AOT — Zero Runtime</h3>
-        <p>Compiled to a native binary with .NET 9 AOT. No runtime installation required. Cold start under 50ms.</p>
+        <h3>Async Indexing</h3>
+        <p>BullMQ job queue for document indexing. Chunk, embed, and store documents asynchronously with job status tracking.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🔀</div>
-        <h3>Multi-Port Forwarding</h3>
-        <p>Forward unlimited ports through a single SSH jump host connection simultaneously.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔄</div>
-        <h3>Background Daemon</h3>
-        <p>Runs as a Systemd user service. Tunnels stay alive even after you close the terminal.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📋</div>
-        <h3>Profile Management</h3>
-        <p>Save multiple SSH tunnel configurations. Switch between dev, staging, and production in seconds.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔒</div>
-        <h3>Private Key Auth</h3>
-        <p>Connects using your SSH private key. Supports custom key paths per profile.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">⬆️</div>
-        <h3>Self-Update</h3>
-        <p>One command to update both CLI and daemon from GitHub Releases. Atomic binary swap with auto-restart.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🖥️</div>
-        <h3>Rich Terminal UI</h3>
-        <p>Powered by Spectre.Console. Beautiful tables, spinners, and progress bars — not just plain text.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🏗️</div>
-        <h3>ARM64 Support</h3>
-        <p>Native binaries for both x86_64 and aarch64. Works on Apple Silicon Macs in Linux VMs too.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🛡️</div>
-        <h3>Systemd Hardening</h3>
-        <p>Service runs with <code>NoNewPrivileges</code>, <code>PrivateTmp</code>, and <code>ProtectSystem</code> for minimal attack surface.</p>
+        <div class="feature-icon">📖</div>
+        <h3>OpenAPI / Swagger</h3>
+        <p>Full OpenAPI 3.0 spec with interactive Swagger UI. Auto-generated from TypeScript decorators for always-accurate docs.</p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── DESKTOP GUI ── -->
-<section id="gui" style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-  <div class="container">
-    <div class="section-label">Desktop App</div>
-    <h2 class="section-title">🖥️ SSH Tunnel Manager — GUI</h2>
-    <p class="section-sub" style="margin-bottom: 2rem;">
-      A cross-platform desktop app built with <strong style="color:var(--cyan)">Tauri</strong> (Rust) + <strong style="color:var(--cyan)">Angular 19</strong>.
-      Manage tunnels visually — no terminal needed.
-    </p>
-
-    <!-- GUI Features chips -->
-    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem;">
-      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">📋 Dashboard</span>
-      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">▶️ One-click actions</span>
-      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">➕ Add/Remove ports</span>
-      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">🔒 Secure IPC</span>
-      <span style="padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: rgba(0,210,190,0.06);">🖥️ System Tray</span>
-    </div>
-
-    <!-- Download buttons -->
-    <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem; font-weight: 600;">⬇ Download for Linux</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-
-      <!-- .deb -->
-      <a href="https://github.com/skyber2016/tunnel/releases/latest" target="_blank" rel="noopener" style="
-        display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem;
-        background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
-        text-decoration: none; transition: border-color 0.2s, transform 0.2s;
-      " onmouseover="this.style.borderColor='rgba(0,210,190,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
-        <span style="font-size: 2rem;">📦</span>
-        <div>
-          <div style="color: var(--text); font-weight: 600; font-size: 0.95rem;">.deb Package</div>
-          <div style="color: var(--muted); font-size: 0.8rem;">Debian / Ubuntu — <code style="color:var(--cyan2); font-size:0.75rem;">sudo dpkg -i *.deb</code></div>
-        </div>
-      </a>
-
-      <!-- .AppImage -->
-      <a href="https://github.com/skyber2016/tunnel/releases/latest" target="_blank" rel="noopener" style="
-        display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem;
-        background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
-        text-decoration: none; transition: border-color 0.2s, transform 0.2s;
-      " onmouseover="this.style.borderColor='rgba(0,210,190,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
-        <span style="font-size: 2rem;">🐧</span>
-        <div>
-          <div style="color: var(--text); font-weight: 600; font-size: 0.95rem;">.AppImage</div>
-          <div style="color: var(--muted); font-size: 0.8rem;">Universal Linux — <code style="color:var(--cyan2); font-size:0.75rem;">chmod +x *.AppImage && ./*.AppImage</code></div>
-        </div>
-      </a>
-
-      <!-- .rpm -->
-      <a href="https://github.com/skyber2016/tunnel/releases/latest" target="_blank" rel="noopener" style="
-        display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem;
-        background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
-        text-decoration: none; transition: border-color 0.2s, transform 0.2s;
-      " onmouseover="this.style.borderColor='rgba(0,210,190,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
-        <span style="font-size: 2rem;">🔴</span>
-        <div>
-          <div style="color: var(--text); font-weight: 600; font-size: 0.95rem;">.rpm Package</div>
-          <div style="color: var(--muted); font-size: 0.8rem;">Fedora / RHEL — <code style="color:var(--cyan2); font-size:0.75rem;">sudo rpm -i *.rpm</code></div>
-        </div>
-      </a>
-
-    </div>
-
-    <!-- Build from source -->
-    <div class="terminal" style="max-width: 600px;">
-      <div class="terminal-bar">
-        <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
-        <span>Build from source</span>
+  <section class="architecture" id="architecture">
+    <h2 class="features-title">Architecture</h2>
+    <p class="features-subtitle">Built on battle-tested open source infrastructure</p>
+    <div class="arch-flow">
+      <div class="arch-row">
+        <div class="arch-box primary">Admin Portal<br><small style="color:var(--text-muted)">Angular 19</small></div>
+        <div class="arch-box primary">MCP Server<br><small style="color:var(--text-muted)">stdio</small></div>
+        <div class="arch-box">External Clients<br><small style="color:var(--text-muted)">API Keys</small></div>
       </div>
-      <div class="terminal-body">
-        <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">cd src/Tunnel.Gui</span></div>
-        <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">npm install</span></div>
-        <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">npm run tauri build</span></div>
-        <div class="term-blank"></div>
-        <div class="term-line"><span class="term-green">✔ Bundled:</span><span class="term-grey"> .deb, .rpm, .AppImage → src-tauri/target/release/bundle/</span></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box primary" style="min-width:400px;">Gateway API<br><small style="color:var(--text-muted)">NestJS · TypeScript · Swagger</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-row">
+        <div class="arch-box">PostgreSQL<br><small style="color:var(--text-muted)">Prisma ORM</small></div>
+        <div class="arch-box">Qdrant<br><small style="color:var(--text-muted)">Vectors</small></div>
+        <div class="arch-box">Redis<br><small style="color:var(--text-muted)">BullMQ</small></div>
+        <div class="arch-box">Ollama<br><small style="color:var(--text-muted)">LLM</small></div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── DEMO ── -->
-<section id="demo" class="demo-section">
-  <div class="container">
-    <div class="section-label">Demo</div>
-    <h2 class="section-title">Set up in under 60 seconds</h2>
-    <p class="section-sub" style="margin-bottom: 2.5rem;">From zero to a live multi-port tunnel in four commands.</p>
-
-    <div class="demo-grid">
-      <!-- Left terminal -->
-      <div class="terminal">
-        <div class="terminal-bar">
-          <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
-          <span>tunnel CLI</span>
-        </div>
-        <div class="terminal-body">
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel new prod-db</span></div>
-          <div class="term-line"><span class="term-green">✔ Profile 'prod-db' created.</span></div>
-          <div class="term-blank"></div>
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel use prod-db</span></div>
-          <div class="term-line"><span class="term-grey">Connecting to admin@jump.example.com...</span></div>
-          <div class="term-line"><span class="term-green">✔ Tunnel 'prod-db' is active.</span></div>
-          <div class="term-blank"></div>
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel add --name postgres --local 5432 --remote 5432</span></div>
-          <div class="term-line"><span class="term-green">✔ Added 'postgres':</span><span class="term-grey"> localhost:5432 → 127.0.0.1:5432</span></div>
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel add --name redis --local 6379 --remote 6379</span></div>
-          <div class="term-line"><span class="term-green">✔ Added 'redis':</span><span class="term-grey"> localhost:6379 → 127.0.0.1:6379</span></div>
-        </div>
-      </div>
-
-      <!-- Right terminal — status output -->
-      <div class="terminal">
-        <div class="terminal-bar">
-          <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
-          <span>tunnel status</span>
-        </div>
-        <div class="terminal-body">
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel status</span></div>
-          <div class="term-blank"></div>
-          <div class="term-line" style="color: var(--green)">─── ● CONNECTED — prod-db ───</div>
-          <div class="term-line" style="display:block; font-size:0.72rem; color: var(--muted); font-family:'JetBrains Mono',monospace; line-height:1.7">
-            ╭──────────┬─────────┬───────────┬──────────────┬────────╮<br/>
-            │ Name     │ Profile │ Local Port│ Remote       │ Status │<br/>
-            ├──────────┼─────────┼───────────┼──────────────┼────────┤<br/>
-            │<span class="term-cmd"> postgres </span>│ prod-db │<span class="term-cyan"> :5432     </span>│ 127.0.0.1:5432│<span class="term-green"> ● OPEN </span>│<br/>
-            │<span class="term-cmd"> redis    </span>│ prod-db │<span class="term-cyan"> :6379     </span>│ 127.0.0.1:6379│<span class="term-green"> ● OPEN </span>│<br/>
-            ╰──────────┴─────────┴───────────┴──────────────┴────────╯
-          </div>
-          <div class="term-blank"></div>
-          <div class="term-line"><span class="term-prompt">$ </span><span class="term-cmd">tunnel remove --name redis</span></div>
-          <div class="term-line"><span class="term-green">✔ Port forwarding 'redis' removed.</span></div>
-          <div class="term-blank"></div>
-          <div class="term-line"><span class="term-prompt">$ </span><span class="cursor"></span></div>
-        </div>
+  <section class="cta">
+    <div class="cta-inner">
+      <h2>Ready to Get Started?</h2>
+      <p>Deploy the gateway, index your knowledge, and start querying in minutes.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="/swagger" class="btn btn-primary">Open Swagger</a>
+        <a href="/admin" class="btn btn-secondary">Admin Portal →</a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── COMMANDS ── -->
-<section id="commands">
-  <div class="container">
-    <div class="section-label">Commands</div>
-    <h2 class="section-title">Full command reference</h2>
-    <p class="section-sub" style="margin-bottom: 2rem;">All 7 commands designed for fast, intuitive use.</p>
+  <footer>
+    <p>Central Knowledge Gateway · Built with NestJS, Angular, Qdrant, Ollama · ISC License</p>
+  </footer>
 
-    <div class="commands-grid">
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel new &lt;name&gt;</div>
-        <div class="cmd-desc">Create a new SSH profile interactively</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel list</div>
-        <div class="cmd-desc">List all profiles — shows Profile, Host, User, Ports, Status</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel use &lt;name&gt;</div>
-        <div class="cmd-desc">Activate a profile and establish the SSH tunnel</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel add --name &lt;n&gt; --local &lt;p&gt; --remote &lt;p&gt; [--remote-host &lt;h&gt;]</div>
-        <div class="cmd-desc">Add a named port rule to the active profile</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel stop</div>
-        <div class="cmd-desc">Stop the currently active tunnel</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel status</div>
-        <div class="cmd-desc">Show per-port status of the active profile (Name, Profile, Ports)</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel remove --name &lt;n&gt;</div>
-        <div class="cmd-desc">Remove a named port rule from the active profile</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel remove --profile-name &lt;n&gt;</div>
-        <div class="cmd-desc">Delete an entire profile (stops tunnel if active)</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel reconnect --profile-name &lt;n&gt;</div>
-        <div class="cmd-desc">Close and reopen full SSH connection for a profile</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel reconnect --name &lt;n&gt;</div>
-        <div class="cmd-desc">Reconnect a single named port rule in the active profile</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel clean</div>
-        <div class="cmd-desc">Delete all profiles and reset config (confirmation required)</div>
-      </div>
-      <div class="cmd-row">
-        <div class="cmd-key">tunnel update [--daemon-only]</div>
-        <div class="cmd-desc">Self-update to the latest release from GitHub</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── UNINSTALL ── -->
-<section id="uninstall" style="background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-  <div class="container">
-    <div class="section-label">Uninstall</div>
-    <h2 class="section-title">Remove old versions first</h2>
-    <p class="section-sub" style="margin-bottom: 2rem;">
-      Before installing or reinstalling, you must remove any existing installation.
-      The installer will <strong>block with an error</strong> if conflicting binaries are found.
-    </p>
-
-    <!-- Warning box -->
-    <div style="
-      background: rgba(240,192,64,0.06);
-      border: 1px solid rgba(240,192,64,0.25);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 2rem;
-      display: flex; gap: 0.75rem; align-items: flex-start;
-    ">
-      <span style="font-size: 1.2rem; flex-shrink: 0;">⚠️</span>
-      <div>
-        <p style="color: var(--yellow); font-weight: 600; margin-bottom: 0.25rem;">Conflict check enforced</p>
-        <p style="color: var(--muted); font-size: 0.875rem;">
-          The unofficial or previous versions of <code style="color:var(--cyan2)">tunnel</code> and <code style="color:var(--cyan2)">tunnel-daemon</code>
-          you may have installed will conflict with a new release.
-          You must uninstall these packages before installing a new version.
-        </p>
-      </div>
-    </div>
-
-    <!-- Two command boxes -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
-
-      <!-- Remove binaries only -->
-      <div class="terminal">
-        <div class="terminal-bar">
-          <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
-          <span>Keep profiles</span>
-        </div>
-        <div class="terminal-body">
-          <div class="term-line" style="margin-bottom:0.75rem; color: var(--muted); font-size:0.75rem;">
-            Removes binaries &amp; service. Keeps <code>~/.tunnel/</code> profiles.
-          </div>
-          <div class="term-line">
-            <span class="term-prompt">$ </span>
-            <span class="term-cmd" style="word-break:break-all; font-size:0.75rem;">curl -sSL .../uninstall.sh | bash</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Full purge -->
-      <div class="terminal">
-        <div class="terminal-bar">
-          <div class="dot-red"></div><div class="dot-yel"></div><div class="dot-grn"></div>
-          <span>Full purge</span>
-        </div>
-        <div class="terminal-body">
-          <div class="term-line" style="margin-bottom:0.75rem; color: var(--muted); font-size:0.75rem;">
-            Removes everything including all profile data in <code>~/.tunnel/</code>.
-          </div>
-          <div class="term-line">
-            <span class="term-prompt">$ </span>
-            <span class="term-cmd" style="word-break:break-all; font-size:0.75rem;">curl -sSL .../uninstall.sh | bash -s -- --purge</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- What gets removed table -->
-    <div style="margin-top: 2rem;">
-      <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 1rem;">What gets removed:</p>
-      <div class="commands-grid">
-        <div class="cmd-row">
-          <div class="cmd-key" style="color: var(--yellow);">/usr/local/bin/tunnel</div>
-          <div class="cmd-desc">CLI binary — always removed</div>
-        </div>
-        <div class="cmd-row">
-          <div class="cmd-key" style="color: var(--yellow);">/usr/local/bin/tunnel-daemon</div>
-          <div class="cmd-desc">Daemon binary — always removed</div>
-        </div>
-        <div class="cmd-row">
-          <div class="cmd-key" style="color: var(--yellow);">~/.config/systemd/user/tunnel.service</div>
-          <div class="cmd-desc">Systemd unit file — always removed</div>
-        </div>
-        <div class="cmd-row">
-          <div class="cmd-key" style="color: var(--muted);">~/.tunnel/profiles.json</div>
-          <div class="cmd-desc">Profile data — <strong>preserved by default</strong>, removed only with <code>--purge</code></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── FOOTER ── -->
-<footer>
-  <p>
-    Built with ❤️ &amp; <a href="https://dotnet.microsoft.com" target="_blank" rel="noopener">.NET 9</a> ·
-    <a href="https://github.com/skyber2016/tunnel" target="_blank" rel="noopener">GitHub</a> ·
-    MIT License
-  </p>
-  <p style="margin-top: 0.5rem; font-size: 0.75rem;">
-    <a href="https://github.com/skyber2016/tunnel/releases" target="_blank" rel="noopener">Releases</a> ·
-    <a href="https://github.com/skyber2016/tunnel/issues" target="_blank" rel="noopener">Report a Bug</a>
-  </p>
-</footer>
-
+  <script>
+    document.querySelectorAll('.feature-card').forEach((card, i) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(30px)';
+      card.style.transition = `opacity 0.6s ease ${i * 0.08}s, transform 0.6s ease ${i * 0.08}s`;
+    });
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.feature-card').forEach(card => observer.observe(card));
+  </script>
 </body>
 </html>
