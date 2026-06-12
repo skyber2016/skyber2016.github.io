@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Central Knowledge Gateway — Enterprise Knowledge Platform</title>
+  <meta name="description" content="Multi-tenant semantic search, RAG, and knowledge management platform. Index, search, and generate knowledge with enterprise-grade security and RBAC." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       CSS VARIABLES & RESET
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg: #06080d;
+      --bg-card: #0d1117;
+      --bg-card-hover: #161b22;
+      --border: #21262d;
+      --border-glow: #30363d;
+      --text: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #484f58;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --green: #22c55e;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --rose: #ef4444;
+      --purple: #a855f7;
+      --gradient-hero: linear-gradient(135deg, #6366f1 0%, #06b6d4 50%, #22c55e 100%);
+      --gradient-card: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(6,182,212,0.04) 100%);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; transition: color var(--transition); }
+    a:hover { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BACKGROUND EFFECTS
+       ═══════════════════════════════════════════════════════════════ */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-glow {
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════════════════════════ */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    section {
+      padding: 100px 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NAVBAR
+       ═══════════════════════════════════════════════════════════════ */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 0;
+      background: rgba(6, 8, 13, 0.8);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      transition: all var(--transition);
+    }
+
+    .navbar .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-hero);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color var(--transition);
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.875rem;
+      font-family: var(--font);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(99,102,241,0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-light);
+      box-shadow: 0 0 30px rgba(99,102,241,0.5);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: var(--accent-glow);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════════════════════ */
+    .hero {
+      padding: 180px 0 120px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-light);
+      background: var(--accent-glow);
+      border: 1px solid rgba(99,102,241,0.2);
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease-out;
+    }
+
+    .hero-badge .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s ease-out 0.1s both;
+    }
+
+    .hero h1 .gradient-text {
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+      animation: fadeUp 0.6s ease-out 0.2s both;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      animation: fadeUp 0.6s ease-out 0.3s both;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-top: 80px;
+      animation: fadeUp 0.6s ease-out 0.4s both;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ARCHITECTURE DIAGRAM
+       ═══════════════════════════════════════════════════════════════ */
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-light);
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .arch-diagram {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .arch-diagram::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gradient-card);
+      pointer-events: none;
+    }
+
+    .arch-layers {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: relative;
+    }
+
+    .arch-layer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .arch-layer-label {
+      width: 120px;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .arch-layer-items {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .arch-node {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all var(--transition);
+      flex: 1;
+      min-width: 140px;
+      justify-content: center;
+    }
+
+    .arch-node:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .arch-node .icon {
+      font-size: 1.1rem;
+    }
+
+    .arch-connector {
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .arch-connector svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text-muted);
+    }
+
+    .arch-node.accent   { border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.06); }
+    .arch-node.green    { border-color: rgba(34,197,94,0.3);  background: rgba(34,197,94,0.06);  }
+    .arch-node.cyan     { border-color: rgba(6,182,212,0.3);  background: rgba(6,182,212,0.06);  }
+    .arch-node.amber    { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.06); }
+    .arch-node.purple   { border-color: rgba(168,85,247,0.3); background: rgba(168,85,247,0.06); }
+    .arch-node.rose     { border-color: rgba(239,68,68,0.3);  background: rgba(239,68,68,0.06);  }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FEATURES GRID
+       ═══════════════════════════════════════════════════════════════ */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient-hero);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .tag {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       STRENGTHS SECTION
+       ═══════════════════════════════════════════════════════════════ */
+    .strengths-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .strength-card {
+      text-align: center;
+      padding: 40px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all var(--transition);
+    }
+
+    .strength-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .strength-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .strength-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .strength-card p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TECH STACK
+       ═══════════════════════════════════════════════════════════════ */
+    .tech-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tech-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all var(--transition);
+    }
+
+    .tech-badge:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .tech-badge .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CTA
+       ═══════════════════════════════════════════════════════════════ */
+    .cta {
+      text-align: center;
+      padding: 120px 0;
+    }
+
+    .cta-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 80px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient-hero);
+    }
+
+    .cta-box h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -0.03em;
+    }
+
+    .cta-box p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      margin-bottom: 32px;
+    }
+
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════ */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.5); }
+    }
+
+    /* scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero-stats { gap: 24px; flex-wrap: wrap; }
+      .strengths-grid { grid-template-columns: repeat(2, 1fr); }
+      .arch-layer { flex-direction: column; }
+      .arch-layer-label { width: auto; text-align: center; }
+      .features-grid { grid-template-columns: 1fr; }
+      .cta-box { padding: 48px 24px; }
+      .cta-box h2 { font-size: 1.8rem; }
+      .hero-actions { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background Effects -->
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NAVBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span>CKG</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#architecture">Architecture</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#strengths">Strengths</a></li>
+      <li><a href="#tech">Tech Stack</a></li>
+    </ul>
+    <a href="https://github.com/your-org/central-knowledge-gateway" class="btn btn-outline">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="pulse"></span>
+      Enterprise Knowledge Platform
+    </div>
+    <h1>
+      Your knowledge,<br />
+      <span class="gradient-text">unified & searchable</span>
+    </h1>
+    <p>
+      Index documents, search semantically, and generate AI-powered answers 
+      — all within a multi-tenant platform with full RBAC, audit trails, and MCP integration.
+    </p>
+    <div class="hero-actions">
+      <a href="#architecture" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Explore Architecture
+      </a>
+      <a href="https://github.com/your-org/central-knowledge-gateway" class="btn btn-outline">
+        View on GitHub →
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">3</div>
+        <div class="hero-stat-label">Apps (API · Dashboard · MCP)</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">16</div>
+        <div class="hero-stat-label">API Modules</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">15</div>
+        <div class="hero-stat-label">Dashboard Features</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">6</div>
+        <div class="hero-stat-label">MCP Tools</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ARCHITECTURE DIAGRAM
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">System Design</span>
+      <h2>Architecture Overview</h2>
+      <p>A layered monorepo with clear separation between clients, API, services, and infrastructure</p>
+    </div>
+
+    <div class="arch-diagram reveal">
+      <div class="arch-layers">
+        <!-- Layer 1: Clients -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Clients</div>
+          <div class="arch-layer-items">
+            <div class="arch-node accent"><span class="icon">🖥️</span> Angular Dashboard</div>
+            <div class="arch-node purple"><span class="icon">🤖</span> MCP Server (Claude/Cursor)</div>
+            <div class="arch-node cyan"><span class="icon">🔌</span> External API Consumers</div>
+          </div>
+        </div>
+
+        <!-- Connector -->
+        <div class="arch-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+
+        <!-- Layer 2: API Gateway -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">API Gateway</div>
+          <div class="arch-layer-items">
+            <div class="arch-node green" style="flex: 2;">
+              <span class="icon">🚀</span>
+              <strong>NestJS REST API</strong> — JWT Auth · RBAC · Swagger · SSE
+            </div>
+          </div>
+        </div>
+
+        <!-- Connector -->
+        <div class="arch-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+
+        <!-- Layer 3: Modules -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Modules</div>
+          <div class="arch-layer-items">
+            <div class="arch-node"><span class="icon">📄</span> Documents</div>
+            <div class="arch-node"><span class="icon">🔍</span> Search</div>
+            <div class="arch-node"><span class="icon">🧠</span> RAG</div>
+            <div class="arch-node"><span class="icon">💾</span> Memory</div>
+            <div class="arch-node"><span class="icon">🔐</span> Auth</div>
+          </div>
+        </div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-label"></div>
+          <div class="arch-layer-items">
+            <div class="arch-node"><span class="icon">🏢</span> Tenants</div>
+            <div class="arch-node"><span class="icon">👥</span> Teams</div>
+            <div class="arch-node"><span class="icon">📁</span> Projects</div>
+            <div class="arch-node"><span class="icon">🔑</span> API Keys</div>
+            <div class="arch-node"><span class="icon">📊</span> Audit</div>
+          </div>
+        </div>
+
+        <!-- Connector -->
+        <div class="arch-connector">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+
+        <!-- Layer 4: Infrastructure -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Infrastructure</div>
+          <div class="arch-layer-items">
+            <div class="arch-node accent"><span class="icon">🐘</span> PostgreSQL</div>
+            <div class="arch-node cyan"><span class="icon">🔷</span> Qdrant Vector DB</div>
+            <div class="arch-node rose"><span class="icon">⚡</span> Redis + BullMQ</div>
+            <div class="arch-node green"><span class="icon">🕸️</span> Neo4j Graph</div>
+            <div class="arch-node amber"><span class="icon">🤖</span> Ollama / LiteLLM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FEATURES
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Capabilities</span>
+      <h2>Everything you need for enterprise knowledge</h2>
+      <p>From document ingestion to AI-powered answers, fully managed with multi-tenant isolation</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(99,102,241,0.1); color: var(--accent);">🔍</div>
+        <h3>Semantic Vector Search</h3>
+        <p>Index documents into vector embeddings and search by meaning, not just keywords. Powered by Qdrant with configurable embedding models.</p>
+        <div class="feature-tags">
+          <span class="tag">Qdrant</span>
+          <span class="tag">Embeddings</span>
+          <span class="tag">Similarity</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(34,197,94,0.1); color: var(--green);">🧠</div>
+        <h3>RAG Pipeline</h3>
+        <p>Ask questions and get AI-generated answers grounded in your documents. Full pipeline: retrieve relevant chunks → generate with LLM context.</p>
+        <div class="feature-tags">
+          <span class="tag">Ollama</span>
+          <span class="tag">LiteLLM</span>
+          <span class="tag">Chunking</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(168,85,247,0.1); color: var(--purple);">💾</div>
+        <h3>Long-term Memory Engine</h3>
+        <p>Save and recall project knowledge across sessions. LLM-powered deduplication automatically classifies new info as INSERT, UPDATE, or IGNORE.</p>
+        <div class="feature-tags">
+          <span class="tag">Vector Memory</span>
+          <span class="tag">LLM Analysis</span>
+          <span class="tag">Dedup</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(6,182,212,0.1); color: var(--cyan);">🏢</div>
+        <h3>Multi-Tenant RBAC</h3>
+        <p>Full organizational hierarchy: Tenant → Team → Project with role-based access (ROOT / USER). Complete data isolation between tenants.</p>
+        <div class="feature-tags">
+          <span class="tag">Tenant</span>
+          <span class="tag">Team</span>
+          <span class="tag">JWT</span>
+          <span class="tag">RBAC</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.1); color: var(--amber);">🤖</div>
+        <h3>MCP Server</h3>
+        <p>Integrate with Claude Desktop, Cursor, and any MCP-compatible AI agent. 6 tools for search, RAG, document management, and more.</p>
+        <div class="feature-tags">
+          <span class="tag">MCP Protocol</span>
+          <span class="tag">Claude</span>
+          <span class="tag">Cursor</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(239,68,68,0.1); color: var(--rose);">🖥️</div>
+        <h3>Admin Dashboard</h3>
+        <p>Angular 19 dashboard with 15 feature modules. Dark/light themes, i18n (VI/EN), real-time SSE trace logs, and cascading entity selectors.</p>
+        <div class="feature-tags">
+          <span class="tag">Angular 19</span>
+          <span class="tag">Signals</span>
+          <span class="tag">SSE</span>
+          <span class="tag">i18n</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STRENGTHS
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="strengths" style="background: rgba(99,102,241,0.02);">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Why CKG?</span>
+      <h2>Built for production</h2>
+      <p>Enterprise-grade design decisions that set this platform apart</p>
+    </div>
+
+    <div class="strengths-grid reveal">
+      <div class="strength-card">
+        <span class="strength-icon">🔒</span>
+        <h4>Zero-Trust Security</h4>
+        <p>JWT auth with PermissionGuard on every route. API keys are SHA-256 hashed. Audit logs track all actions.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">🏗️</span>
+        <h4>Modular Monorepo</h4>
+        <p>3 apps in one repo with shared tooling. Each NestJS module is self-contained with its own DTOs, service, and controller.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">⚡</span>
+        <h4>Async Processing</h4>
+        <p>BullMQ-powered job queues for document indexing. Non-blocking API responses with background workers and SSE status.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">🔄</span>
+        <h4>LLM Agnostic</h4>
+        <p>Pluggable LLM layer: switch between Ollama (local) and LiteLLM (cloud) with zero code changes. Provider abstraction built-in.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">📊</span>
+        <h4>Full Observability</h4>
+        <p>Real-time SSE trace logs, per-project usage tracking, audit trails with actor/action/metadata, and request ID middleware.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">🌍</span>
+        <h4>i18n Ready</h4>
+        <p>Dashboard supports Vietnamese and English out of the box. Signal-based language switching with no page reload.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">🎨</span>
+        <h4>Premium UI</h4>
+        <p>Dark/light themes with smooth transitions. Skeleton loading states, cascading dropdowns, responsive data tables.</p>
+      </div>
+      <div class="strength-card">
+        <span class="strength-icon">🐳</span>
+        <h4>Docker-Ready</h4>
+        <p>One-command infrastructure setup. PostgreSQL, Redis, Qdrant, Neo4j — all containerized with health checks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TECH STACK
+     ═══════════════════════════════════════════════════════════════ -->
+<section id="tech">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Technology</span>
+      <h2>Modern, proven stack</h2>
+    </div>
+
+    <div class="tech-row reveal">
+      <div class="tech-badge"><span class="dot" style="background: #E0234E;"></span> NestJS</div>
+      <div class="tech-badge"><span class="dot" style="background: #DD0031;"></span> Angular 19</div>
+      <div class="tech-badge"><span class="dot" style="background: #4169E1;"></span> PostgreSQL</div>
+      <div class="tech-badge"><span class="dot" style="background: #DC382D;"></span> Redis</div>
+      <div class="tech-badge"><span class="dot" style="background: #24292F;"></span> Qdrant</div>
+      <div class="tech-badge"><span class="dot" style="background: #018BFF;"></span> Neo4j</div>
+      <div class="tech-badge"><span class="dot" style="background: #F59E0B;"></span> Ollama</div>
+      <div class="tech-badge"><span class="dot" style="background: #2563EB;"></span> Prisma</div>
+      <div class="tech-badge"><span class="dot" style="background: #22C55E;"></span> BullMQ</div>
+      <div class="tech-badge"><span class="dot" style="background: #8B5CF6;"></span> MCP Protocol</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CTA
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="cta">
+  <div class="container">
+    <div class="cta-box reveal">
+      <h2>Ready to get started?</h2>
+      <p>Clone the repo, start Docker, and have your knowledge platform running in minutes.</p>
+      <div class="cta-actions">
+        <a href="https://github.com/your-org/central-knowledge-gateway" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+          Clone Repository
+        </a>
+        <a href="#architecture" class="btn btn-outline">
+          Read Documentation →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <p>Central Knowledge Gateway — Built with ❤️ for enterprise knowledge management</p>
+    <p style="margin-top: 8px;">ISC License · 2024–2026</p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SCROLL REVEAL
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+  );
+
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+</script>
+
+</body>
+</html>
