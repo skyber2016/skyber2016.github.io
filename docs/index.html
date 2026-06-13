@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Central Knowledge Gateway — Enterprise Knowledge Platform</title>
-  <meta name="description" content="Multi-tenant semantic search, RAG, and knowledge management platform. Index, search, and generate knowledge with enterprise-grade security and RBAC." />
+  <title>Central Knowledge Gateway — Enterprise Knowledge & Cognitive AI Platform</title>
+  <meta name="description" content="Multi-tenant semantic search, RAG, cognitive AI memory, and knowledge management platform. Build AI agents that learn user preferences and adapt over time." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     /* ═══════════════════════════════════════════════════════════════
@@ -697,15 +697,15 @@
   <div class="container">
     <div class="hero-badge">
       <span class="pulse"></span>
-      Enterprise Knowledge Platform
+      Cognitive AI Platform
     </div>
     <h1>
       Your knowledge,<br />
-      <span class="gradient-text">unified & searchable</span>
+      <span class="gradient-text">cognitive & adaptive</span>
     </h1>
     <p>
-      Index documents, search semantically, and generate AI-powered answers 
-      — all within a multi-tenant platform with full RBAC, audit trails, and MCP integration.
+      Index documents, search semantically, generate AI-powered answers, and build cognitive AI agents that learn how users think, work, and make decisions 
+      — all within a multi-tenant platform with full RBAC and MCP integration.
     </p>
     <div class="hero-actions">
       <a href="#architecture" class="btn btn-primary">
@@ -723,16 +723,16 @@
         <div class="hero-stat-label">Apps (API · Dashboard · MCP)</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-value">16</div>
-        <div class="hero-stat-label">API Modules</div>
+        <div class="hero-stat-value">9</div>
+        <div class="hero-stat-label">Cognitive Subsystems</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-value">15</div>
-        <div class="hero-stat-label">Dashboard Features</div>
+        <div class="hero-stat-value">231</div>
+        <div class="hero-stat-label">Unit Tests</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-value">6</div>
-        <div class="hero-stat-label">MCP Tools</div>
+        <div class="hero-stat-value">8</div>
+        <div class="hero-stat-label">BullMQ Workers</div>
       </div>
     </div>
   </div>
@@ -786,22 +786,34 @@
         <div class="arch-layer">
           <div class="arch-layer-label">Modules</div>
           <div class="arch-layer-items">
-            <div class="arch-node"><span class="icon">📄</span> Documents</div>
-            <div class="arch-node"><span class="icon">🔍</span> Search</div>
-            <div class="arch-node"><span class="icon">🧠</span> RAG</div>
-            <div class="arch-node"><span class="icon">💾</span> Memory</div>
-            <div class="arch-node"><span class="icon">🔐</span> Auth</div>
+            <div class="arch-node">📄 Documents</div>
+            <div class="arch-node">🔍 Search</div>
+            <div class="arch-node">🧠 RAG</div>
+            <div class="arch-node">🔐 Auth</div>
+            <div class="arch-node">🏢 Tenants</div>
+          </div>
+        </div>
+
+        <!-- Layer 3b: Cognitive Engine -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Cognitive</div>
+          <div class="arch-layer-items">
+            <div class="arch-node purple"><span class="icon">🧬</span> DNA Memory</div>
+            <div class="arch-node purple"><span class="icon">🪞</span> Reflection</div>
+            <div class="arch-node purple"><span class="icon">👤</span> Identity</div>
+            <div class="arch-node purple"><span class="icon">🎯</span> Adaptive</div>
+            <div class="arch-node purple"><span class="icon">💡</span> Insights</div>
           </div>
         </div>
 
         <div class="arch-layer">
           <div class="arch-layer-label"></div>
           <div class="arch-layer-items">
-            <div class="arch-node"><span class="icon">🏢</span> Tenants</div>
-            <div class="arch-node"><span class="icon">👥</span> Teams</div>
-            <div class="arch-node"><span class="icon">📁</span> Projects</div>
-            <div class="arch-node"><span class="icon">🔑</span> API Keys</div>
-            <div class="arch-node"><span class="icon">📊</span> Audit</div>
+            <div class="arch-node"><span class="icon">💾</span> Episodic</div>
+            <div class="arch-node"><span class="icon">📚</span> Semantic</div>
+            <div class="arch-node"><span class="icon">⏱️</span> Temporal</div>
+            <div class="arch-node"><span class="icon">⚡</span> Working</div>
+            <div class="arch-node"><span class="icon">📊</span> Orchestrator</div>
           </div>
         </div>
 
@@ -861,13 +873,15 @@
       </div>
 
       <div class="feature-card reveal">
-        <div class="feature-icon" style="background: rgba(168,85,247,0.1); color: var(--purple);">💾</div>
-        <h3>Long-term Memory Engine</h3>
-        <p>Save and recall project knowledge across sessions. LLM-powered deduplication automatically classifies new info as INSERT, UPDATE, or IGNORE.</p>
+        <div class="feature-icon" style="background: rgba(168,85,247,0.1); color: var(--purple);">🧬</div>
+        <h3>Cognitive Memory Engine</h3>
+        <p>Multi-tier AI memory system: episodic, semantic, temporal, and DNA memory. Learns user preferences, detects behavioral drift, generates reflections, and builds identity profiles for personalized AI.</p>
         <div class="feature-tags">
-          <span class="tag">Vector Memory</span>
-          <span class="tag">LLM Analysis</span>
-          <span class="tag">Dedup</span>
+          <span class="tag">DNA Memory</span>
+          <span class="tag">Reflection</span>
+          <span class="tag">Identity</span>
+          <span class="tag">Adaptive</span>
+          <span class="tag">231 Tests</span>
         </div>
       </div>
 
